@@ -1,0 +1,57 @@
+% Archivo ARFF Mejorado para el Análisis de Impacto de Ventas de la Empresa IMPACTO
+@relation impacto_ventas
+
+% Definición de atributos
+
+% Variables Numéricas Primero
+@attribute precio             numeric         % Precio del producto en soles (PEN)
+@attribute stock              numeric         % Cantidad disponible en inventario
+@attribute calificacion       numeric         % Calificación del producto (1 a 5)
+@attribute garantia           numeric         % Garantía en meses
+@attribute edad_cliente       numeric         % Edad del cliente
+@attribute ingreso_cliente    numeric         % Ingreso mensual del cliente
+@attribute tiempo_entrega     numeric         % Tiempo de entrega en días
+@attribute proyeccion_anual   numeric         % Proyección de ventas a 12 meses
+@attribute tendencia          numeric         % Tendencia de ventas (-1 a 1)
+@attribute crecimiento        numeric         % Tasa de crecimiento anual (%)
+@attribute estacionalidad     numeric         % Factor de estacionalidad (1-4)
+
+% Variables Categóricas Después
+@attribute producto           {CPU, GPU, RAM, SSD, HDD, Motherboard, Fuente, Caja, Teclado, Ratón, Monitor, Consola, Periféricos_gamer, Otros}
+@attribute tipo_producto      {Intel_i5, Intel_i7, Intel_i9, AMD_Ryzen_5, AMD_Ryzen_7, NVIDIA_GTX_1660, NVIDIA_RTX_3080, DDR4_8GB, DDR4_16GB, SSD_500GB, SSD_1TB, HDD_1TB, Motherboard_ATX, Motherboard_MicroATX, Fuente_500W, Fuente_750W, Caja_MidTower, Caja_FullTower, Teclado_Mecánico, Teclado_RGB, Ratón_Gamer, Ratón_Ergonómico, Monitor_24_pulgadas, Monitor_27_pulgadas, Consola_PlayStation, Consola_Xbox, Periféricos_Gamer_MousePad, Periféricos_Gamer_Auriculares, Otros}
+@attribute marca              {Intel, AMD, NVIDIA, Corsair, ASUS, MSI, Gigabyte, Logitech, Razer, Samsung, Seagate, Western_Digital, HP, Dell, Apple, Microsoft}
+@attribute region             {Miraflores, San_Isidro, Surco, La_Molina, San_Bernardo, Comas, Santiago_de_Lima, Barranco, Callao, Pueblo_Libre}
+@attribute metodo_pago        {Yape, Transferencia, Tarjeta}
+@attribute envio              {gratis, pagado}
+@attribute canal_venta        {online, tienda_fisica}
+@attribute tipo_cliente       {joven, profesional, coleccionista}
+@attribute promocion          {si, no}
+@attribute sexo_cliente       {masculino, femenino, otro}
+@attribute retorno            {si, no}
+@attribute tendencia_mercado  {creciente, estable, decreciente}
+@attribute vendido            {si, no}         % Clase objetivo
+
+@data
+
+400, 10, 4, 12, 21, 3100, 2, 4800, 0.4, 9, 1, Ratón, Ratón_Ergonómico, Logitech, Santiago_de_Lima, Yape, gratis, tienda_fisica, joven, no, femenino, no, estable, si
+500, 10, 5, 24, 32, 5500, 2, 6000, 0.6, 12, 3, Monitor, Monitor_27_pulgadas, ASUS, San_Isidro, Yape, gratis, online, profesional, si, masculino, no, creciente, si
+600, 18, 5, 24, 34, 7000, 4, 7200, 0.6, 13, 4, Motherboard, Motherboard_MicroATX, Gigabyte, Comas, Transferencia, pagado, online, coleccionista, si, otro, no, creciente, si
+300, 15, 4, 12, 26, 3200, 2, 3600, 0.4, 8, 1, SSD, SSD_500GB, Samsung, San_Isidro, Transferencia, pagado, online, joven, no, femenino, no, estable, si
+130, 20, 3, 6, 23, 2900, 1, 1560, -0.1, -3, 1, Teclado, Teclado_RGB, Razer, San_Bernardo, Yape, gratis, tienda_fisica, joven, no, masculino, no, decreciente, no
+850, 8, 5, 24, 31, 6000, 1, 10200, 0.8, 16, 3, GPU, NVIDIA_RTX_3080, NVIDIA, Surco, Yape, gratis, tienda_fisica, coleccionista, si, masculino, no, creciente, si
+1200, 5, 4, 24, 35, 7000, 4, 14400, 0.7, 15, 4, Motherboard, Motherboard_ATX, MSI, San_Bernardo, Yape, gratis, online, coleccionista, si, otro, no, creciente, si
+800, 15, 5, 24, 25, 4500, 2, 9600, 0.8, 15, 2, CPU, Intel_i7, Intel, Miraflores, Yape, gratis, online, profesional, si, masculino, no, creciente, si
+500, 12, 5, 24, 33, 5500, 3, 6000, 0.5, 10, 3, GPU, NVIDIA_GTX_1660, NVIDIA, Barranco, Transferencia, pagado, tienda_fisica, profesional, si, masculino, no, estable, si
+600, 20, 4, 12, 22, 3500, 3, 7200, 0.5, 10, 1, RAM, DDR4_16GB, Corsair, Surco, Transferencia, pagado, tienda_fisica, joven, no, femenino, no, estable, si
+900, 7, 5, 24, 36, 6500, 3, 10800, 0.8, 17, 3, GPU, NVIDIA_RTX_3080, NVIDIA, Barranco, Tarjeta, pagado, online, profesional, si, masculino, no, creciente, si
+250, 22, 4, 12, 27, 3800, 2, 3000, 0.3, 7, 1, CPU, AMD_Ryzen_5, AMD, Callao, Transferencia, gratis, tienda_fisica, joven, no, femenino, no, estable, si
+250, 25, 4, 12, 19, 2800, 2, 3000, 0.3, 5, 1, SSD, SSD_1TB, Samsung, La_Molina, Yape, gratis, online, joven, no, femenino, no, estable, si
+200, 20, 4, 12, 24, 3500, 2, 2400, 0.3, 6, 1, Ratón, Ratón_Gamer, Logitech, Callao, Yape, gratis, online, joven, no, otro, no, estable, si
+400, 10, 5, 24, 28, 5000, 3, 4800, 0.6, 12, 2, Monitor, Monitor_27_pulgadas, ASUS, Miraflores, Transferencia, pagado, tienda_fisica, profesional, si, masculino, no, creciente, si
+700, 10, 5, 24, 29, 4800, 3, 8400, 0.7, 14, 2, CPU, AMD_Ryzen_7, AMD, Miraflores, Tarjeta, gratis, tienda_fisica, profesional, si, masculino, no, creciente, si
+90, 30, 3, 6, 22, 3000, 1, 1080, -0.2, -5, 2, Teclado, Teclado_Mecánico, Razer, Santiago_de_Lima, Yape, gratis, online, joven, no, femenino, si, decreciente, no
+350, 18, 5, 12, 27, 4000, 2, 4200, 0.4, 8, 1, Fuente, Fuente_750W, Corsair, Comas, Tarjeta, pagado, tienda_fisica, joven, no, masculino, no, estable, si
+450, 12, 5, 24, 28, 4500, 2, 5400, 0.6, 12, 2, Monitor, Monitor_24_pulgadas, ASUS, La_Molina, Tarjeta, pagado, online, profesional, si, femenino, no, creciente, si
+1500, 8, 5, 24, 30, 6000, 1, 18000, 0.9, 20, 3, GPU, NVIDIA_RTX_3080, NVIDIA, San_Isidro, Tarjeta, gratis, tienda_fisica, coleccionista, si, masculino, no, creciente, si
+1100, 5, 5, 24, 29, 6000, 1, 13200, 0.7, 15, 4, Fuente, Fuente_500W, Corsair, Pueblo_Libre, Yape, gratis, online, profesional, si, otro, no, creciente, si
+75, 25, 3, 6, 20, 2500, 1, 900, -0.2, -4, 2, Periféricos_gamer, Periféricos_Gamer_Auriculares, Razer, Miraflores, Transferencia, pagado, tienda_fisica, joven, no, femenino, no, decreciente, no

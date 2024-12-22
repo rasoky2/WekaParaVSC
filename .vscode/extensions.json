@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "redhat.vscode-yaml",           // Para validación de formato
+        "streetsidesoftware.code-spell-checker", // Revisar ortografía en comentarios
+        "wayou.vscode-todo-highlight",  // Resaltar TODOs y FIXMEs
+        "yzhang.markdown-all-in-one"    // Para documentación en MD
+    ],
+    "unwantedRecommendations": []
+} 

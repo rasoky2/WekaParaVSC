@@ -1,0 +1,441 @@
+{
+    "name": "weka-arff-support",
+    "displayName": "WEKA ARFF Support",
+    "description": "Soporte completo para archivos ARFF de WEKA",
+    "version": "1.0.1",
+    "publisher": "Rasoky2",
+    "icon": "images/icon.png",
+    "galleryBanner": {
+        "color": "#C80000",
+        "theme": "dark"
+    },
+    "keywords": [
+        "weka",
+        "arff",
+        "machine learning",
+        "data mining",
+        "preprocessing",
+        "classification",
+        "regression",
+        "clustering",
+        "association rules",
+        "attribute selection",
+        "experiments",
+        "workflow",
+        "visualization"
+    ],
+    "preview": true,
+    "badges": [
+        {
+            "url": "https://img.shields.io/badge/WEKA-Support-blue",
+            "href": "https://www.cs.waikato.ac.nz/ml/weka/",
+            "description": "WEKA Support"
+        },
+        {
+            "url": "https://img.shields.io/badge/Java-17%2B-orange",
+            "href": "https://adoptium.net/",
+            "description": "Requires Java 17 or higher"
+        },
+        {
+            "url": "https://img.shields.io/badge/Weka-3.9.7-green",
+            "href": "https://sourceforge.net/projects/weka/",
+            "description": "Compatible with Weka 3.9.7"
+        }
+    ],
+    "markdown": "github",
+    "qna": "marketplace",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rasoky2/WekaParaVSC.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Rasoky2/weka-arff-support/issues"
+    },
+    "homepage": "https://github.com/Rasoky2/weka-arff-support#readme",
+    "baseContentUrl": "https://raw.githubusercontent.com/Rasoky2/weka-arff-support/main",
+    "baseImagesUrl": "https://raw.githubusercontent.com/Rasoky2/weka-arff-support/main/images",
+    "engines": {
+        "vscode": "^1.74.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Data Science",
+        "Formatters"
+    ],
+    "requirements": {
+        "java": {
+            "version": ">=17",
+            "description": "Se requiere Java 17 o superior.",
+            "download": "https://adoptium.net/"
+        },
+        "weka": {
+            "version": "3.9.7",
+            "description": "Se requiere WEKA 3.9.7 o superior",
+            "download": "https://sourceforge.net/projects/weka/",
+            "notes": "WEKA 3.9.7 es compatible con Java 17 y ofrece mejor rendimiento"
+        }
+    },
+    "activationEvents": [
+        "workspaceContains:**/*.arff"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "arff",
+                "aliases": [
+                    "ARFF",
+                    "arff",
+                    "weka"
+                ],
+                "extensions": [
+                    ".arff",
+                    ".ARFF"
+                ],
+                "filenames": [
+                    "*.arff"
+                ],
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "light": "./icons/arff-light.svg",
+                    "dark": "./icons/arff-dark.svg"
+                }
+            }
+        ],
+        "grammars": [
+            {
+                "language": "arff",
+                "scopeName": "source.arff",
+                "path": "./syntaxes/arff.tmLanguage.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "weka-arff.preview",
+                "title": "WEKA: Vista previa de datos",
+                "category": "WEKA ARFF",
+                "icon": "$(preview)"
+            },
+            {
+                "command": "weka-arff.openInWeka",
+                "title": "WEKA: Abrir en WEKA Explorer",
+                "category": "WEKA ARFF",
+                "icon": "$(play)"
+            },
+            {
+                "command": "weka-arff.runAlgorithm",
+                "title": "WEKA: Ejecutar Algoritmo",
+                "category": "WEKA ARFF",
+                "icon": "$(beaker)"
+            },
+            {
+                "command": "weka-arff.analyze",
+                "title": "WEKA: Analizar Dataset",
+                "category": "WEKA ARFF",
+                "icon": "$(graph)"
+            },
+            {
+                "command": "weka-arff.toggleTypeHints",
+                "title": "WEKA: Alternar Type Hints",
+                "category": "WEKA ARFF",
+                "icon": "$(eye)"
+            },
+            {
+                "command": "weka-arff.randomize",
+                "title": "WEKA: Aleatorizar Dataset",
+                "category": "WEKA ARFF",
+                "icon": "$(sync)"
+            },
+            {
+                "command": "weka-arff.neuralNetwork",
+                "title": "WEKA: Red Neuronal",
+                "category": "WEKA ARFF",
+                "icon": "$(circuit-board)"
+            }
+        ],
+        "configuration": {
+            "title": "ARFF",
+            "properties": {
+                "arff.theme": {
+                    "type": "string",
+                    "default": "dark",
+                    "enum": [
+                        "light",
+                        "dark"
+                    ],
+                    "description": "Tema de colores para archivos ARFF"
+                },
+                "arff.maxLineLength": {
+                    "type": "number",
+                    "default": 1000,
+                    "description": "Longitud máxima de línea permitida"
+                },
+                "arff.validationDelay": {
+                    "type": "number",
+                    "default": 500,
+                    "description": "Retraso en ms antes de validar el documento"
+                },
+                "arff.javaPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Ruta al ejecutable de Java (java.exe en Windows, java en Unix). Se requiere Java 17 o superior. Si está vacío, se usará JAVA_HOME."
+                },
+                "arff.wekaPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Ruta al ejecutable de WEKA (weka.jar). Se recomienda usar WEKA 3.9.7 con Java 17 o superior. Descarga: https://sourceforge.net/projects/weka/"
+                },
+                "arff.java.minVersion": {
+                    "type": "string",
+                    "default": "17",
+                    "enum": [
+                        "17",
+                        "18",
+                        "19",
+                        "20",
+                        "21"
+                    ],
+                    "description": "Versión mínima de Java requerida. Se recomienda Java 17 LTS o superior."
+                },
+                "arff.weka.version": {
+                    "type": "string",
+                    "default": "3.9.7",
+                    "description": "Versión de WEKA a utilizar. Se recomienda 3.9.7 o superior."
+                },
+                "arff.showTypeHints": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Mostrar sugerencias de tipo al escribir datos"
+                },
+                "arff.typeHints.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Habilitar sugerencias de tipo"
+                },
+                "arff.typeHints.style": {
+                    "type": "string",
+                    "enum": [
+                        "inline",
+                        "background"
+                    ],
+                    "default": "inline",
+                    "description": "Estilo de las sugerencias de tipo"
+                },
+                "arff.typeHints.font": {
+                    "type": "object",
+                    "description": "Configuración de la fuente para los type hints",
+                    "properties": {
+                        "family": {
+                            "type": "string",
+                            "default": "Inter",
+                            "description": "Familia de fuente para los type hints"
+                        },
+                        "weight": {
+                            "type": "string",
+                            "enum": [
+                                "400",
+                                "500",
+                                "600"
+                            ],
+                            "default": "400",
+                            "description": "Peso de la fuente (400=normal, 500=medium, 600=semibold)"
+                        },
+                        "style": {
+                            "type": "string",
+                            "enum": [
+                                "normal",
+                                "italic"
+                            ],
+                            "default": "normal",
+                            "description": "Estilo de la fuente"
+                        }
+                    }
+                },
+                "arff.typeHints.appearance": {
+                    "type": "object",
+                    "description": "Configuración de la apariencia de los type hints",
+                    "properties": {
+                        "opacity": {
+                            "type": "number",
+                            "default": 0.8,
+                            "minimum": 0.1,
+                            "maximum": 1,
+                            "description": "Opacidad de los type hints (0.1 a 1.0)"
+                        },
+                        "position": {
+                            "type": "string",
+                            "enum": [
+                                "inline",
+                                "above",
+                                "below"
+                            ],
+                            "default": "inline",
+                            "description": "Posición de los type hints"
+                        },
+                        "showBorder": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "Mostrar borde alrededor de los type hints"
+                        }
+                    }
+                },
+                "arff.typeHints.behavior": {
+                    "type": "object",
+                    "description": "Configuración del comportamiento de los type hints",
+                    "properties": {
+                        "showOnHover": {
+                            "type": "boolean",
+                            "default": true,
+                            "description": "Mostrar información detallada al pasar el mouse"
+                        },
+                        "animationSpeed": {
+                            "type": "string",
+                            "enum": [
+                                "fast",
+                                "normal",
+                                "slow"
+                            ],
+                            "default": "normal",
+                            "description": "Velocidad de las animaciones"
+                        },
+                        "maxValuesToShow": {
+                            "type": "number",
+                            "default": 3,
+                            "minimum": 1,
+                            "maximum": 10,
+                            "description": "Número máximo de valores a mostrar en los hints"
+                        }
+                    }
+                },
+                "arff.typeHints.displayStyle": {
+                    "type": "string",
+                    "enum": [
+                        "type",
+                        "attribute",
+                        "both"
+                    ],
+                    "default": "type",
+                    "description": "Estilo de visualización de los type hints: 'type' muestra el tipo, 'attribute' muestra el nombre del atributo, 'both' muestra ambos"
+                },
+                "arff.maxNumberOfProblems": {
+                    "type": "number",
+                    "default": 100,
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "description": "Número máximo de problemas a mostrar"
+                },
+                "arff.diagnostics.debounceDelay": {
+                    "type": "number",
+                    "default": 500,
+                    "minimum": 100,
+                    "maximum": 5000,
+                    "description": "Retraso en milisegundos antes de actualizar los diagnósticos"
+                },
+                "arff.diagnostics.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Habilitar/deshabilitar diagnósticos en tiempo real"
+                },
+                "arff.diagnostics.severity": {
+                    "type": "object",
+                    "description": "Configuración de severidad para diferentes tipos de diagnósticos",
+                    "properties": {
+                        "syntaxError": {
+                            "type": "string",
+                            "enum": [
+                                "error",
+                                "warning",
+                                "information",
+                                "hint"
+                            ],
+                            "default": "error",
+                            "description": "Severidad para errores de sintaxis"
+                        },
+                        "typeError": {
+                            "type": "string",
+                            "enum": [
+                                "error",
+                                "warning",
+                                "information",
+                                "hint"
+                            ],
+                            "default": "error",
+                            "description": "Severidad para errores de tipo"
+                        },
+                        "valueError": {
+                            "type": "string",
+                            "enum": [
+                                "error",
+                                "warning",
+                                "information",
+                                "hint"
+                            ],
+                            "default": "warning",
+                            "description": "Severidad para errores de valor"
+                        }
+                    }
+                }
+            }
+        },
+        "menus": {
+            "editor/title": [
+                {
+                    "when": "resourceLangId == arff",
+                    "command": "weka-arff.preview",
+                    "group": "navigation@1"
+                },
+                {
+                    "when": "resourceLangId == arff",
+                    "command": "weka-arff.openInWeka",
+                    "group": "navigation@2"
+                },
+                {
+                    "when": "resourceLangId == arff",
+                    "command": "weka-arff.runAlgorithm",
+                    "group": "navigation@3"
+                },
+                {
+                    "when": "resourceLangId == arff",
+                    "command": "weka-arff.analyze",
+                    "group": "navigation@4"
+                },
+                {
+                    "when": "resourceLangId == arff || resourceExtname == '.data'",
+                    "command": "weka-arff.randomize",
+                    "group": "navigation@5"
+                },
+                {
+                    "when": "resourceLangId == arff",
+                    "command": "weka-arff.neuralNetwork",
+                    "group": "navigation@6"
+                }
+            ]
+        },
+        "configurationDefaults": {
+            "[arff]": {
+                "editor.semanticHighlighting.enabled": true
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint src --ext ts",
+        "lint:fix": "eslint src --ext ts --fix",
+        "lint:unused": "eslint src --ext ts --rule 'unused-imports/no-unused-imports: error'",
+        "test": "node ./out/test/runTest.js",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/eslint": "^9.6.1",
+        "@types/node": "^14.x",
+        "@types/vscode": "^1.60.0",
+        "@typescript-eslint/eslint-plugin": "^5.62.0",
+        "@typescript-eslint/parser": "^5.62.0",
+        "eslint": "^8.57.1",
+        "eslint-plugin-unused-imports": "^4.1.4",
+        "typescript": "^4.x"
+    }
+}

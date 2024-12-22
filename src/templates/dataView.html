@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista de Datos ARFF</title>
+    <style>
+        :root {
+            --primary-color: var(--vscode-button-background);
+            --primary-hover: var(--vscode-button-hoverBackground);
+            --error-color: var(--vscode-errorForeground);
+            --border-color: var(--vscode-panel-border);
+            --header-bg: var(--vscode-editor-selectionBackground);
+            --row-hover: var(--vscode-list-hoverBackground);
+            --row-active: var(--vscode-list-activeSelectionBackground);
+            --font-family: var(--vscode-editor-font-family);
+            --font-size: var(--vscode-editor-font-size);
+        }
+
+        body { 
+            padding: 15px;
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            color: var(--vscode-editor-foreground);
+            background: var(--vscode-editor-background);
+            margin: 0;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: var(--vscode-editor-background);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-group:not(:last-child) {
+            margin-right: 15px;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stats {
+            margin: 10px 0;
+            padding: 15px;
+            background: var(--vscode-editor-background);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            padding: 10px;
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .virtual-scroll {
+            height: calc(100vh - 250px);
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        th {
+            background: var(--header-bg);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            font-weight: 600;
+            padding: 12px 8px;
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+        }
+
+        .attribute-type {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            opacity: 0.8;
+            font-weight: normal;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .attribute-type.nominal {
+            color: var(--vscode-charts-yellow);
+        }
+
+        .attribute-type.numeric {
+            color: var(--vscode-charts-blue);
+        }
+
+        .attribute-type.string {
+            color: var(--vscode-charts-green);
+        }
+
+        .attribute-type.date {
+            color: var(--vscode-charts-purple);
+        }
+
+        tr:nth-child(even) {
+            background: var(--vscode-editor-lineHighlightBackground);
+        }
+
+        tr:hover {
+            background: var(--row-hover);
+        }
+
+        tr.editing {
+            background: var(--row-active);
+        }
+
+        .cell-editable {
+            position: relative;
+            cursor: cell;
+            -webkit-user-select: none;
+            user-select: none;
+            transition: background-color 0.1s;
+        }
+
+        .cell-editable.active {
+            background: var(--vscode-editor-selectionBackground) !important;
+            outline: 2px solid var(--vscode-focusBorder);
+            outline-offset: -2px;
+        }
+
+        .cell-editable.selected {
+            background: var(--vscode-editor-selectionBackground) !important;
+            opacity: 0.7;
+        }
+
+        .cell-editable:focus {
+            outline: 2px solid var(--vscode-focusBorder);
+            outline-offset: -2px;
+        }
+
+        .cell-input {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: none;
+            padding: 8px;
+            margin: 0;
+            font-family: inherit;
+            font-size: inherit;
+            box-sizing: border-box;
+            outline: 2px solid var(--vscode-focusBorder);
+            z-index: 10;
+        }
+
+        .selection-box {
+            position: absolute;
+            border: 2px solid var(--vscode-focusBorder);
+            background: var(--vscode-editor-selectionBackground);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .cell-editable::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            border: 4px solid transparent;
+            border-top-color: var(--vscode-focusBorder);
+            border-right-color: var(--vscode-focusBorder);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .cell-editable:hover::after {
+            opacity: 0.5;
+        }
+
+        .selecting {
+            cursor: cell;
+        }
+
+        .active-cell-indicator {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 6px;
+            height: 6px;
+            background: var(--vscode-focusBorder);
+            border-radius: 50%;
+        }
+
+        .loading {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #progress {
+            margin-left: 5px;
+            font-weight: 500;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--vscode-editor-background);
+            padding: 5px 8px;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            padding: 5px 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--vscode-notificationToast-background);
+            color: var(--vscode-notificationToast-foreground);
+            border: 1px solid var(--vscode-notificationToast-border);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification.success {
+            background: var(--vscode-notificationsSuccessIcon-foreground);
+            color: var(--vscode-editor-background);
+        }
+
+        .notification.error {
+            background: var(--vscode-notificationsErrorIcon-foreground);
+            color: var(--vscode-editor-background);
+        }
+
+        .notification-icon {
+            font-size: 18px;
+        }
+
+        .row-highlight {
+            animation: highlightRow 1s ease-out;
+        }
+
+        @keyframes highlightRow {
+            0% {
+                background-color: var(--vscode-charts-green);
+                opacity: 0.5;
+            }
+            100% {
+                background-color: transparent;
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="btn-group">
+            <button class="btn btn-icon" id="btnSave" disabled>
+                <span>💾</span> Guardar Cambios
+            </button>
+            <button class="btn btn-icon" id="btnExport">
+                <span>📤</span> Exportar CSV
+            </button>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-icon" id="btnAddRow">
+                <span>➕</span> Agregar Fila
+            </button>
+        </div>
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <div class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <strong>Dataset:</strong> {{relation}}
+            </div>
+            <div class="stat-item">
+                <strong>Atributos:</strong> {{attributeCount}}
+            </div>
+            <div class="stat-item">
+                <strong>Instancias:</strong> {{instanceCount}}
+            </div>
+        </div>
+    </div>
+
+    <div class="virtual-scroll">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    {{#each attributes}}
+                    <th>
+                        {{name}}
+                        <div class="attribute-type {{type}}">
+                            {{#if values}}
+                            [{{values}}]
+                            {{else}}
+                            {{type}}
+                            {{/if}}
+                        </div>
+                    </th>
+                    {{/each}}
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        Cargando datos...<span id="progress">0%</span>
+    </div>
+
+    <div id="notification" class="notification">
+        <span class="notification-icon"></span>
+        <span class="notification-message"></span>
+    </div>
+
+    <script>
+        (function() {
+            const vscode = acquireVsCodeApi();
+            const tableBody = document.getElementById('tableBody');
+            const loading = document.getElementById('loading');
+            const progress = document.getElementById('progress');
+            const btnSave = document.getElementById('btnSave');
+            const btnExport = document.getElementById('btnExport');
+            const errorMessage = document.getElementById('errorMessage');
+            const notification = document.getElementById('notification');
+            
+            let hasChanges = false;
+            let activeCell = null;
+            let selectedCells = new Set();
+            let isSelecting = false;
+            let selectionStart = null;
+            let selectionBox = null;
+
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            function createSelectionBox() {
+                if (!selectionBox) {
+                    selectionBox = document.createElement('div');
+                    selectionBox.className = 'selection-box';
+                    document.body.appendChild(selectionBox);
+                }
+            }
+
+            function updateSelectionBox(startCell, endCell) {
+                if (!selectionBox) return;
+
+                const startRect = startCell.getBoundingClientRect();
+                const endRect = endCell.getBoundingClientRect();
+
+                const left = Math.min(startRect.left, endRect.left);
+                const top = Math.min(startRect.top, endRect.top);
+                const right = Math.max(startRect.right, endRect.right);
+                const bottom = Math.max(startRect.bottom, endRect.bottom);
+
+                selectionBox.style.left = left + 'px';
+                selectionBox.style.top = top + 'px';
+                selectionBox.style.width = (right - left) + 'px';
+                selectionBox.style.height = (bottom - top) + 'px';
+            }
+
+            function removeSelectionBox() {
+                if (selectionBox) {
+                    selectionBox.remove();
+                    selectionBox = null;
+                }
+            }
+
+            function startEditing(cell, selectAll = true) {
+                if (cell.querySelector('input')) return;
+
+                const text = cell.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = text;
+                input.className = 'cell-input';
+                
+                cell.textContent = '';
+                cell.appendChild(input);
+                input.focus();
+                if (selectAll) {
+                    input.select();
+                }
+
+                activeCell = cell;
+                cell.classList.add('active');
+
+                function finishEditing(cancel = false) {
+                    const newValue = cancel ? text : input.value;
+                    cell.textContent = newValue;
+                    cell.classList.remove('active');
+                    
+                    if (!cancel && newValue !== text) {
+                        hasChanges = true;
+                        btnSave.disabled = false;
+                        cell.parentElement.classList.add('editing');
+                    }
+
+                    activeCell = null;
+                }
+
+                input.addEventListener('blur', () => finishEditing(false));
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        finishEditing(false);
+                        const nextCell = cell.parentElement.nextElementSibling?.cells[cell.cellIndex];
+                        if (nextCell) {
+                            startEditing(nextCell);
+                        }
+                    } else if (e.key === 'Escape') {
+                        finishEditing(true);
+                    } else if (e.key === 'Tab') {
+                        e.preventDefault();
+                        finishEditing(false);
+                        const nextCell = e.shiftKey 
+                            ? cell.previousElementSibling || cell.parentElement.previousElementSibling?.lastElementChild
+                            : cell.nextElementSibling || cell.parentElement.nextElementSibling?.firstElementChild;
+                        if (nextCell) {
+                            startEditing(nextCell);
+                        }
+                    } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                        if (!e.ctrlKey && !e.shiftKey) {
+                            e.preventDefault();
+                            finishEditing(false);
+                            navigateWithArrows(cell, e.key);
+                        }
+                    }
+                });
+            }
+
+            function navigateWithArrows(currentCell, key) {
+                const row = currentCell.parentElement;
+                const table = row.parentElement;
+                const cellIndex = currentCell.cellIndex;
+                const rowIndex = row.rowIndex;
+                let nextCell;
+
+                switch (key) {
+                    case 'ArrowLeft':
+                        if (cellIndex > 0) {
+                            nextCell = currentCell.previousElementSibling;
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (cellIndex < row.cells.length - 1) {
+                            nextCell = currentCell.nextElementSibling;
+                        }
+                        break;
+                    case 'ArrowUp':
+                        if (rowIndex > 1) { // Skip header row
+                            nextCell = table.rows[rowIndex - 1].cells[cellIndex];
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (rowIndex < table.rows.length - 1) {
+                            nextCell = table.rows[rowIndex + 1].cells[cellIndex];
+                        }
+                        break;
+                }
+
+                if (nextCell) {
+                    startEditing(nextCell);
+                }
+            }
+
+            function handleCellClick(e) {
+                const cell = e.target.closest('td');
+                if (!cell) return;
+
+                if (e.ctrlKey) {
+                    cell.classList.toggle('selected');
+                    if (cell.classList.contains('selected')) {
+                        selectedCells.add(cell);
+                    } else {
+                        selectedCells.delete(cell);
+                    }
+                } else if (e.shiftKey && activeCell) {
+                    selectRange(activeCell, cell);
+                } else {
+                    clearSelection();
+                    startEditing(cell);
+                }
+            }
+
+            function selectRange(startCell, endCell) {
+                clearSelection();
+                const startRow = startCell.parentElement.rowIndex;
+                const startCol = startCell.cellIndex;
+                const endRow = endCell.parentElement.rowIndex;
+                const endCol = endCell.cellIndex;
+
+                const minRow = Math.min(startRow, endRow);
+                const maxRow = Math.max(startRow, endRow);
+                const minCol = Math.min(startCol, endCol);
+                const maxCol = Math.max(startCol, endCol);
+
+                for (let i = minRow; i <= maxRow; i++) {
+                    for (let j = minCol; j <= maxCol; j++) {
+                        const cell = tableBody.rows[i - 1].cells[j];
+                        cell.classList.add('selected');
+                        selectedCells.add(cell);
+                    }
+                }
+            }
+
+            function clearSelection() {
+                selectedCells.forEach(cell => cell.classList.remove('selected'));
+                selectedCells.clear();
+                removeSelectionBox();
+            }
+
+            tableBody.addEventListener('mousedown', e => {
+                const cell = e.target.closest('td');
+                if (!cell) return;
+
+                if (!e.ctrlKey && !e.shiftKey) {
+                    isSelecting = true;
+                    selectionStart = cell;
+                    createSelectionBox();
+                    clearSelection();
+                }
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (!isSelecting || !selectionStart) return;
+
+                const cell = document.elementFromPoint(e.clientX, e.clientY)?.closest('td');
+                if (cell && cell.parentElement.parentElement === tableBody) {
+                    updateSelectionBox(selectionStart, cell);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isSelecting) {
+                    isSelecting = false;
+                    removeSelectionBox();
+                }
+            });
+
+            document.addEventListener('keydown', e => {
+                if (activeCell || !tableBody.contains(document.activeElement)) return;
+
+                if (e.key.startsWith('Arrow')) {
+                    e.preventDefault();
+                    const focusedCell = document.activeElement.closest('td');
+                    if (focusedCell) {
+                        navigateWithArrows(focusedCell, e.key);
+                    }
+                } else if (!e.ctrlKey && !e.altKey && /^[a-zA-Z0-9]$/.test(e.key)) {
+                    const focusedCell = document.activeElement.closest('td');
+                    if (focusedCell) {
+                        startEditing(focusedCell, false);
+                    }
+                }
+            });
+
+            tableBody.addEventListener('click', handleCellClick);
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }, 3000);
+            }
+
+            btnSave.addEventListener('click', () => {
+                const changes = [];
+                document.querySelectorAll('tr.editing').forEach(row => {
+                    const rowData = Array.from(row.cells).map(cell => cell.textContent);
+                    changes.push({
+                        index: row.rowIndex - 1,
+                        data: rowData
+                    });
+                });
+
+                vscode.postMessage({
+                    type: 'saveChanges',
+                    changes
+                });
+
+                hasChanges = false;
+                btnSave.disabled = true;
+                document.querySelectorAll('tr.editing').forEach(row => {
+                    row.classList.remove('editing');
+                });
+            });
+
+            btnExport.addEventListener('click', () => {
+                vscode.postMessage({ type: 'export' });
+            });
+
+            function addNewRow() {
+                const table = document.getElementById('dataTable');
+                const headerRow = table.querySelector('thead tr');
+                const newRow = document.createElement('tr');
+                
+                // Crear celdas vacías para cada columna
+                for (let i = 0; i < headerRow.cells.length; i++) {
+                    const cell = document.createElement('td');
+                    cell.className = 'cell-editable';
+                    cell.tabIndex = 0;
+                    cell.textContent = '?';
+                    newRow.appendChild(cell);
+                }
+                
+                table.querySelector('tbody').appendChild(newRow);
+                newRow.classList.add('row-highlight');
+                
+                // Notificar al servicio sobre la nueva fila
+                vscode.postMessage({
+                    type: 'addRow',
+                    rowIndex: table.rows.length - 2
+                });
+
+                showNotification('Nueva fila agregada');
+            }
+
+            // Agregar event listener para el botón de nueva fila
+            document.getElementById('btnAddRow').addEventListener('click', addNewRow);
+
+            function showNotification(message, type = 'success') {
+                const icon = type === 'success' ? '✓' : '✕';
+                notification.querySelector('.notification-icon').textContent = icon;
+                notification.querySelector('.notification-message').textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            window.addEventListener('message', event => {
+                const message = event.data;
+                switch (message.type) {
+                    case 'appendData': {
+                        const fragment = document.createDocumentFragment();
+                        message.data.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = row.map(cell => 
+                                `<td class="cell-editable" tabindex="0" title="${escapeHtml(cell)}">${escapeHtml(cell)}</td>`
+                            ).join('');
+                            fragment.appendChild(tr);
+                        });
+                        tableBody.appendChild(fragment);
+                        progress.textContent = message.progress + '%';
+                        break;
+                    }
+                    case 'updateData': {
+                        // Actualizar datos existentes
+                        const newData = message.data;
+                        while (tableBody.firstChild) {
+                            tableBody.removeChild(tableBody.firstChild);
+                        }
+                        newData.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = row.map(cell => 
+                                `<td class="cell-editable" tabindex="0" title="${escapeHtml(cell)}">${escapeHtml(cell)}</td>`
+                            ).join('');
+                            tableBody.appendChild(tr);
+                        });
+                        showNotification('Datos actualizados');
+                        break;
+                    }
+                    case 'saveComplete': {
+                        showNotification(message.message);
+                        break;
+                    }
+                    case 'error': {
+                        showNotification(message.error, 'error');
+                        break;
+                    }
+                    case 'loadComplete': {
+                        loading.style.display = 'none';
+                        break;
+                    }
+                }
+            });
+
+            window.addEventListener('beforeunload', e => {
+                if (hasChanges) {
+                    e.preventDefault();
+                    return '';
+                }
+            });
+
+            vscode.postMessage({ type: 'ready' });
+        })();
+    </script>
+</body>
+</html> 

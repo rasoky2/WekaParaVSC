@@ -1,0 +1,42 @@
+{
+    "ARFF Relation": {
+        "prefix": ["@relation", "relation"],
+        "body": [
+            "% Define el nombre del dataset",
+            "@relation ${1:nombre_dataset}",
+            "",
+            "$0"
+        ],
+        "description": "Define el nombre del dataset ARFF"
+    },
+    "ARFF Attribute Numeric": {
+        "prefix": ["@attribute-numeric", "attr-num"],
+        "body": [
+            "% Atributo numérico: ${2:descripción}",
+            "% Rango esperado: ${3:min}-${4:max}",
+            "@attribute ${1:nombre} numeric",
+            "$0"
+        ],
+        "description": "Define un atributo numérico"
+    },
+    "ARFF Attribute Nominal": {
+        "prefix": ["@attribute-nominal", "attr-nom"],
+        "body": [
+            "% Atributo nominal: ${2:descripción}",
+            "% Valores posibles: ${3:valores}",
+            "@attribute ${1:nombre} {${3:valor1,valor2}}",
+            "$0"
+        ],
+        "description": "Define un atributo nominal/categórico"
+    },
+    "ARFF Data Section": {
+        "prefix": ["@data", "data"],
+        "body": [
+            "@data",
+            "% Formato: ${1:descripción de formato}",
+            "${2:valor1},${3:valor2},${4:valor3}",
+            "$0"
+        ],
+        "description": "Inicia la sección de datos"
+    }
+} 

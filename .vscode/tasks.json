@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "watch",
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Validar ARFF",
+            "type": "shell",
+            "command": "java -cp weka.jar weka.core.Instances ${file}",
+            "problemMatcher": []
+        },
+        {
+            "label": "Convertir CSV a ARFF",
+            "type": "shell",
+            "command": "java -cp weka.jar weka.core.converters.CSVLoader ${file} > ${fileBasenameNoExtension}.arff"
+        }
+    ]
+} 

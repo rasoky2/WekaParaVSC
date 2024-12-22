@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body { 
+            font-family: var(--vscode-editor-font-family);
+            padding: 20px;
+            line-height: 1.6;
+            color: var(--vscode-editor-foreground);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .timestamp {
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--vscode-editor-foreground);
+            border-bottom: 1px solid var(--vscode-panel-border);
+            padding-bottom: 8px;
+        }
+
+        .metric-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .metric-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--vscode-editor-foreground);
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--vscode-textLink-foreground);
+        }
+
+        .metric-description {
+            font-size: 0.9em;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 8px 16px;
+            border: none;
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            flex: 0 1 auto;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .tab-button:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .tab-button.active {
+            background: var(--vscode-button-hoverBackground);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .metric-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .metric-table th,
+        .metric-table td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid var(--vscode-panel-border);
+            min-width: 80px;
+        }
+
+        .metric-table th {
+            background-color: var(--vscode-editor-background);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .confusion-matrix {
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .confusion-matrix table {
+            border-collapse: collapse;
+            font-size: 0.9em;
+            min-width: max-content;
+        }
+
+        .confusion-matrix th,
+        .confusion-matrix td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--vscode-panel-border);
+        }
+
+        .confusion-matrix th {
+            background-color: var(--vscode-editor-background);
+            font-weight: bold;
+        }
+
+        .code-block {
+            background-color: var(--vscode-textBlockQuote-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .output {
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+
+        .error {
+            background-color: var(--vscode-inputValidation-errorBackground);
+            color: var(--vscode-inputValidation-errorForeground);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .metric-table,
+            .confusion-matrix table {
+                font-size: 0.8em;
+            }
+
+            .metric-card {
+                padding: 10px;
+            }
+
+            .tab-button {
+                min-width: 80px;
+                padding: 6px 12px;
+            }
+
+            .section {
+                padding: 15px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .metric-card:hover {
+                transform: none;
+            }
+
+            .tab-content.active {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="timestamp">
+        Ejecutado el: ${timestamp}
+    </div>
+
+    <div class="tab-container" role="tablist">
+        ${metrics ? `
+            <button class="tab-button active" onclick="showTab('summary')" role="tab" aria-selected="true" aria-controls="summary">Resumen</button>
+            <button class="tab-button" onclick="showTab('details')" role="tab" aria-selected="false" aria-controls="details">Detalles</button>
+        ` : ''}
+        <button class="tab-button ${!metrics ? 'active' : ''}" 
+                onclick="showTab('raw')" 
+                role="tab" 
+                aria-controls="raw"
+                id="raw-tab">Salida Raw</button>
+    </div>
+
+    ${metrics ? `
+        <div id="summary" class="tab-content active" role="tabpanel" aria-labelledby="summary-tab">
+            ${summarySection}
+        </div>
+
+        <div id="details" class="tab-content" role="tabpanel" aria-labelledby="details-tab">
+            ${detailsSection}
+        </div>
+    ` : ''}
+
+    <div id="raw" class="tab-content ${!metrics ? 'active' : ''}" role="tabpanel" aria-labelledby="raw-tab">
+        <div class="section">
+            <div class="section-title">Salida de WEKA</div>
+            <div class="output">${stdout}</div>
+        </div>
+
+        ${stderr ? `
+            <div class="section">
+                <div class="section-title">Errores</div>
+                <div class="error" role="alert">${stderr}</div>
+            </div>
+        ` : ''}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawTab = document.getElementById('raw-tab');
+            if (rawTab) {
+                rawTab.setAttribute('aria-selected', metrics ? 'false' : 'true');
+            }
+        });
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-hidden', 'true');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+                button.setAttribute('aria-selected', 'false');
+            });
+            const selectedTab = document.getElementById(tabId);
+            selectedTab.classList.add('active');
+            selectedTab.setAttribute('aria-hidden', 'false');
+            const selectedButton = document.querySelector(`button[onclick="showTab('${tabId}')"]`);
+            selectedButton.classList.add('active');
+            selectedButton.setAttribute('aria-selected', 'true');
+        }
+    </script>
+</body>
+</html> 

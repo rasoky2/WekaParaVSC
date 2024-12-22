@@ -1,0 +1,21 @@
+{
+    "files.associations": {
+        "*.arff": "arff"
+    },
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "keyword.control.arff",
+                "settings": {
+                    "foreground": "#569CD6"
+                }
+            },
+            {
+                "scope": "entity.name.type.arff",
+                "settings": {
+                    "foreground": "#4EC9B0"
+                }
+            }
+        ]
+    }
+} 

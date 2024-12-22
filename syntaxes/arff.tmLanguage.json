@@ -1,0 +1,71 @@
+{
+    "scopeName": "source.arff",
+    "name": "ARFF",
+    "patterns": [
+        {
+            "match": "(@relation)\\s+([\\w.-]+)",
+            "captures": {
+                "1": { "name": "keyword.control.relation.arff" },
+                "2": { "name": "entity.name.class.arff" }
+            }
+        },
+        {
+            "match": "(@attribute)\\s+([\\w.-]+)\\s+(numeric|string|date|real|integer|\\{[^}]*\\})",
+            "captures": {
+                "1": { "name": "keyword.control.attribute.arff" },
+                "2": { "name": "variable.other.property.arff" },
+                "3": { "name": "storage.type.arff" }
+            }
+        },
+        {
+            "begin": "\\{",
+            "end": "\\}",
+            "name": "meta.braces.arff",
+            "patterns": [
+                {
+                    "match": "\\b\\w+\\b",
+                    "name": "support.variable.nominal.arff"
+                },
+                {
+                    "match": ",",
+                    "name": "punctuation.separator.arff"
+                }
+            ]
+        },
+        {
+            "begin": "\\(",
+            "end": "\\)",
+            "name": "meta.parenthesis.arff",
+            "patterns": [
+                {
+                    "match": "\\b\\w+\\b",
+                    "name": "support.function.arff"
+                }
+            ]
+        },
+        {
+            "match": "@data\\b",
+            "name": "keyword.control.data.arff"
+        },
+        {
+            "match": "\\b(numeric|string|date|real|integer)\\b",
+            "name": "storage.type.arff"
+        },
+        {
+            "match": "\\b[0-9]+(?:\\.[0-9]+)?\\b",
+            "name": "constant.numeric.arff"
+        },
+        {
+            "match": "'[^']*'|\"[^\"]*\"",
+            "name": "string.quoted.arff"
+        },
+        {
+            "match": "\\?",
+            "name": "constant.language.null.arff"
+        },
+        {
+            "match": "%.*$",
+            "name": "comment.line.percentage.arff"
+        }
+    ]
+} 

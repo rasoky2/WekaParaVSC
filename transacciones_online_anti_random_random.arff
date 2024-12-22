@@ -1,0 +1,28 @@
+@relation transacciones_online_antivirus
+@attribute Edad numeric
+@attribute Monto_Transacciones_Mensual numeric
+@attribute Usa_Banca_Online {Si, No}
+@attribute Nivel_Riesgo_Financiero {Bajo, Medio, Alto}
+@attribute Compra_Antivirus {Si, No}
+@data
+
+39,18000,Si,Alto,Si
+35,10000,Si,Alto,Si
+36,7500,Si,Medio,Si
+26,2800,No,Bajo,No
+28,4500,Si,Medio,No
+40,15000,Si,Alto,Si
+33,9000,Si,Alto,Si
+34,11000,Si,Alto,Si
+24,2500,No,Bajo,No
+45,20000,Si,Alto,Si
+30,8000,Si,Alto,Si
+22,2000,No,Bajo,No
+31,7000,Si,Medio,Si
+20,1000,No,Bajo,No
+32,6000,Si,Medio,Si
+25,5000,Si,Medio,Si
+38,12000,Si,Alto,Si
+27,3800,Si,Medio,No
+21,1500,No,Bajo,No
+29,3500,Si,Bajo,No
