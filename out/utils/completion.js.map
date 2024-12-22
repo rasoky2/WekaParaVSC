@@ -1,1 +1,0 @@
-{"version":3,"file":"completion.js","sourceRoot":"","sources":["../../src/utils/completion.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;AAAA,+CAAiC;AAEjC,SAAgB,oBAAoB,CAAC,KAAa,EAAE,MAAc;IAC9D,MAAM,IAAI,GAAG,IAAI,MAAM,CAAC,cAAc,CAAC,KAAK,EAAE,MAAM,CAAC,kBAAkB,CAAC,OAAO,CAAC,CAAC;IACjF,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;IACrB,OAAO,IAAI,CAAC;AAChB,CAAC;AAJD,oDAIC"}
