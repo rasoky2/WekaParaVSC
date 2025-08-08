@@ -12,6 +12,7 @@ interface ArffData {
     relation: string;
     attributes: AttributeInfo[];
     data: string[][];
+    dataStartLine: number;
 }
 
 interface DataChange {
@@ -39,6 +40,8 @@ export class DataViewService implements vscode.Disposable {
     private currentSelection: CellSelection | undefined;
     private disposables: vscode.Disposable[] = [];
     private isDisposed: boolean = false;
+    private cachedArffData: ArffData | undefined;
+    private documentLines: string[] = [];
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -87,6 +90,9 @@ export class DataViewService implements vscode.Disposable {
                 arffData = this.parseArffData(document.getText());
                 this.dataCache.set(documentKey, arffData);
             }
+
+            this.cachedArffData = arffData;
+            this.documentLines = document.getText().split('\n');
 
             // Crear o mostrar el panel
             if (!this.panel) {
@@ -214,7 +220,11 @@ export class DataViewService implements vscode.Disposable {
             });
 
             // Actualizar la vista con los nuevos datos
-            const updatedArffData = this.parseArffData(this.currentDocument.getText());
+            const updatedContent = this.currentDocument.getText();
+            const updatedArffData = this.parseArffData(updatedContent);
+            this.cachedArffData = updatedArffData;
+            this.documentLines = updatedContent.split('\n');
+            this.dataCache.set(this.currentDocument.uri.toString(), updatedArffData);
             this.panel?.webview.postMessage({
                 type: 'updateData',
                 data: updatedArffData.data
@@ -275,8 +285,9 @@ export class DataViewService implements vscode.Disposable {
         const attributes: AttributeInfo[] = [];
         const data: string[][] = [];
         let isData = false;
+        let dataStartLine = -1;
 
-        lines.forEach(line => {
+        lines.forEach((line, index) => {
             const trimmedLine = line.trim();
             if (trimmedLine.startsWith('@relation')) {
                 relation = trimmedLine.split(' ')[1];
@@ -296,42 +307,98 @@ export class DataViewService implements vscode.Disposable {
                 }
             } else if (trimmedLine === '@data') {
                 isData = true;
+                dataStartLine = index + 1;
             } else if (isData && trimmedLine && !trimmedLine.startsWith('%')) {
                 data.push(trimmedLine.split(',').map(value => value.trim()));
             }
         });
 
-        return { relation, attributes, data };
+        return { relation, attributes, data, dataStartLine };
     }
 
     private setupLiveUpdate(document: vscode.TextDocument) {
-        // Disposar los listeners anteriores si existen
+        let changeTimeout: NodeJS.Timeout | undefined;
+        let saveTimeout: NodeJS.Timeout | undefined;
+        let pendingChanges: readonly vscode.TextDocumentContentChangeEvent[] = [];
+
         const changeDisposable = vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document === document && this.panel && !this.isDisposed) {
-                setTimeout(() => {
-                    const arffData = this.parseArffData(document.getText());
-                    this.updateWebviewContent(arffData);
-                    this.panel?.webview.postMessage({
-                        type: 'updateData',
-                        data: arffData.data
-                    });
-                }, 100);
+                pendingChanges = pendingChanges.concat(e.contentChanges);
+                clearTimeout(changeTimeout);
+                changeTimeout = setTimeout(() => {
+                    this.applyDocumentChanges(pendingChanges, document);
+                    pendingChanges = [];
+                }, 200);
             }
         });
 
         const saveDisposable = vscode.workspace.onDidSaveTextDocument(doc => {
             if (doc === document && this.panel && !this.isDisposed) {
-                const arffData = this.parseArffData(doc.getText());
-                this.updateWebviewContent(arffData);
-                this.panel?.webview.postMessage({
-                    type: 'updateData',
-                    data: arffData.data
-                });
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    if (this.cachedArffData) {
+                        this.updateWebviewContent(this.cachedArffData);
+                        this.panel?.webview.postMessage({
+                            type: 'updateData',
+                            data: this.cachedArffData.data
+                        });
+                    }
+                }, 200);
             }
         });
 
-        // Agregar los nuevos disposables
         this.disposables.push(changeDisposable, saveDisposable);
+    }
+
+    private applyDocumentChanges(changes: readonly vscode.TextDocumentContentChangeEvent[], document: vscode.TextDocument) {
+        if (!this.cachedArffData) {
+            const arffData = this.parseArffData(document.getText());
+            this.cachedArffData = arffData;
+            this.documentLines = document.getText().split('\n');
+            this.panel?.webview.postMessage({ type: 'updateData', data: arffData.data });
+            return;
+        }
+
+        let headerChanged = false;
+        for (const change of changes) {
+            if (change.range.start.line < this.cachedArffData.dataStartLine) {
+                headerChanged = true;
+                break;
+            }
+        }
+
+        if (headerChanged) {
+            const arffData = this.parseArffData(document.getText());
+            this.cachedArffData = arffData;
+            this.documentLines = document.getText().split('\n');
+            this.panel?.webview.postMessage({ type: 'updateData', data: arffData.data });
+            return;
+        }
+
+        const updates: { start: number; deleteCount: number; rows: string[][] }[] = [];
+
+        for (const change of changes) {
+            const startLine = change.range.start.line;
+            const endLine = change.range.end.line;
+            const newLines = change.text.split('\n');
+            this.documentLines.splice(startLine, endLine - startLine, ...newLines);
+
+            const rowStart = startLine - this.cachedArffData.dataStartLine;
+            const deleteCount = endLine - startLine;
+            const parsedRows: string[][] = [];
+
+            for (const line of newLines) {
+                const trimmed = line.trim();
+                if (trimmed && !trimmed.startsWith('%')) {
+                    parsedRows.push(trimmed.split(',').map(v => v.trim()));
+                }
+            }
+
+            this.cachedArffData.data.splice(rowStart, deleteCount, ...parsedRows);
+            updates.push({ start: rowStart, deleteCount, rows: parsedRows });
+        }
+
+        this.panel?.webview.postMessage({ type: 'updateRows', updates });
     }
 
     private async renderInitialView(arffData: ArffData): Promise<void> {
@@ -483,7 +550,11 @@ export class DataViewService implements vscode.Disposable {
             await this.currentDocument.save();
 
             // Actualizar la vista después de agregar la fila
-            const updatedArffData = this.parseArffData(this.currentDocument.getText());
+            const updatedContent = this.currentDocument.getText();
+            const updatedArffData = this.parseArffData(updatedContent);
+            this.cachedArffData = updatedArffData;
+            this.documentLines = updatedContent.split('\n');
+            this.dataCache.set(this.currentDocument.uri.toString(), updatedArffData);
             this.panel?.webview.postMessage({
                 type: 'updateData',
                 data: updatedArffData.data
