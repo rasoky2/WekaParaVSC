@@ -21,6 +21,8 @@ export class WekaService implements vscode.Disposable {
     private readonly _algorithmsService: WekaAlgorithmsService;
     private readonly _outputChannel: vscode.OutputChannel;
     private _disposables: vscode.Disposable[] = [];
+    private javaPathCached?: string;
+    private wekaPathCached?: string;
 
     constructor(context: vscode.ExtensionContext, configService: ConfigurationService) {
         this._context = context;
@@ -29,9 +31,19 @@ export class WekaService implements vscode.Disposable {
         this._webviewService = WebviewService.getInstance();
         this._algorithmsService = new WekaAlgorithmsService();
         this._outputChannel = vscode.window.createOutputChannel('WEKA Service');
-        
+
         // Agregar el outputChannel a los disposables
         this._disposables.push(this._outputChannel);
+
+        const configChangeDisposable = vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('arff.javaPath')) {
+                this.javaPathCached = this._configService.getConfiguration().get<string>('javaPath');
+            }
+            if (e.affectsConfiguration('arff.wekaPath')) {
+                this.wekaPathCached = this._configService.getConfiguration().get<string>('wekaPath');
+            }
+        });
+        this._disposables.push(configChangeDisposable);
     }
 
     public dispose(): void {
@@ -80,6 +92,10 @@ export class WekaService implements vscode.Disposable {
 
     private async _getJavaPath(): Promise<string | undefined> {
         try {
+            if (this.javaPathCached && fs.existsSync(this.javaPathCached)) {
+                return this.javaPathCached;
+            }
+
             let javaPath = this._configService.getConfiguration().get<string>('javaPath');
 
             if (!javaPath) {
@@ -100,6 +116,7 @@ export class WekaService implements vscode.Disposable {
 
             if (javaPath && fs.existsSync(javaPath)) {
                 await this._configService.getConfiguration().update('javaPath', javaPath, true);
+                this.javaPathCached = javaPath;
                 return javaPath;
             }
 
@@ -112,8 +129,13 @@ export class WekaService implements vscode.Disposable {
 
     private async _getWekaPath(): Promise<string | undefined> {
         try {
+            if (this.wekaPathCached && fs.existsSync(this.wekaPathCached)) {
+                return this.wekaPathCached;
+            }
+
             const wekaPath = this._configService.getConfiguration().get<string>('wekaPath');
             if (wekaPath?.length && fs.existsSync(wekaPath)) {
+                this.wekaPathCached = wekaPath;
                 return wekaPath;
             }
 
@@ -129,6 +151,7 @@ export class WekaService implements vscode.Disposable {
             const jarPath = result?.[0]?.fsPath;
             if (jarPath) {
                 await this._configService.getConfiguration().update('wekaPath', jarPath, true);
+                this.wekaPathCached = jarPath;
                 return jarPath;
             }
 
