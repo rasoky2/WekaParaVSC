@@ -778,12 +778,39 @@
                         }
                         newData.forEach(row => {
                             const tr = document.createElement('tr');
-                            tr.innerHTML = row.map(cell => 
+                            tr.innerHTML = row.map(cell =>
                                 `<td class="cell-editable" tabindex="0" title="${escapeHtml(cell)}">${escapeHtml(cell)}</td>`
                             ).join('');
                             tableBody.appendChild(tr);
                         });
                         showNotification('Datos actualizados');
+                        break;
+                    }
+                    case 'updateRows': {
+                        message.updates.forEach(update => {
+                            const { start, deleteCount, rows } = update;
+                            for (let i = 0; i < deleteCount - rows.length; i++) {
+                                const toRemove = tableBody.children[start + rows.length];
+                                if (toRemove) {
+                                    tableBody.removeChild(toRemove);
+                                }
+                            }
+                            rows.forEach((row, index) => {
+                                const rowIndex = start + index;
+                                let tr = tableBody.children[rowIndex];
+                                if (!tr) {
+                                    tr = document.createElement('tr');
+                                    if (rowIndex >= tableBody.children.length) {
+                                        tableBody.appendChild(tr);
+                                    } else {
+                                        tableBody.insertBefore(tr, tableBody.children[rowIndex]);
+                                    }
+                                }
+                                tr.innerHTML = row.map(cell =>
+                                    `<td class="cell-editable" tabindex="0" title="${escapeHtml(cell)}">${escapeHtml(cell)}</td>`
+                                ).join('');
+                            });
+                        });
                         break;
                     }
                     case 'saveComplete': {
