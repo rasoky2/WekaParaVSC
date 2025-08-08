@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import { ConfigurationService } from './configurationService';
 import * as os from 'os';
 
@@ -10,8 +9,6 @@ import { StatisticsService } from './statisticsService';
 import { WebviewService } from './webviewService';
 import { IWekaMetrics, IDatasetStats, IAlgorithmRecommendation } from '../interfaces/weka.interface';
 import { WekaAlgorithmsService } from './wekaAlgorithmsService';
-
-const execAsync = promisify(exec);
 
 export class WekaService implements vscode.Disposable {
     private readonly _context: vscode.ExtensionContext;
@@ -54,12 +51,17 @@ export class WekaService implements vscode.Disposable {
 
     private async _findJavaInPath(): Promise<string | undefined> {
         const command = process.platform === 'win32' ? 'where java' : 'which java';
-        try {
-            const { stdout } = await execAsync(command);
-            return stdout.trim();
-        } catch {
-            return undefined;
-        }
+        return new Promise((resolve) => {
+            const child = spawn(command, { shell: true });
+            let output = '';
+            child.stdout.on('data', (data: Buffer) => {
+                output += data.toString();
+            });
+            child.on('error', () => resolve(undefined));
+            child.on('close', () => {
+                resolve(output.trim() || undefined);
+            });
+        });
     }
 
     private async _promptForJavaSelection(): Promise<string | undefined> {
@@ -212,20 +214,43 @@ export class WekaService implements vscode.Disposable {
                     ...options
                 ].join(' ');
 
-                progress.report({ 
+                progress.report({
                     increment: 25,
                     message: 'Procesando resultados...'
                 });
 
-                const { stdout } = await execAsync(command);
-                
-                fs.unlinkSync(tmpFile);
+                const stdout = await new Promise<string>((resolve, reject) => {
+                    const child = spawn(command, { shell: true });
+                    let output = '';
 
-                progress.report({ 
-                    increment: 25,
-                    message: 'Completado'
+                    child.stdout.on('data', (data: Buffer) => {
+                        const text = data.toString();
+                        output += text;
+                        this._outputChannel.append(text);
+                        progress.report({ message: 'Procesando resultados...' });
+                    });
+
+                    child.stderr.on('data', (data: Buffer) => {
+                        const text = data.toString();
+                        this._outputChannel.append(text);
+                        progress.report({ message: 'Procesando resultados...' });
+                    });
+
+                    child.on('error', (err) => {
+                        try { fs.unlinkSync(tmpFile); } catch {}
+                        reject(err);
+                    });
+
+                    child.on('close', () => {
+                        try { fs.unlinkSync(tmpFile); } catch {}
+                        progress.report({
+                            increment: 25,
+                            message: 'Completado'
+                        });
+                        resolve(output);
+                    });
                 });
-                
+
                 return stdout;
             } catch (error) {
                 this._handleError(error instanceof Error ? error : new Error(String(error)));
@@ -614,27 +639,52 @@ export class WekaService implements vscode.Disposable {
             
             this._outputChannel.appendLine('Ejecutando comando:');
             this._outputChannel.appendLine(javaCommand);
-
-            const { stdout, stderr } = await execAsync(javaCommand);
-            
-            // Guardar la salida completa en el canal de salida
             this._outputChannel.appendLine('\nSalida de WEKA:');
-            this._outputChannel.appendLine(stdout);
 
-            if (stderr) {
-                this._outputChannel.appendLine('\nErrores de WEKA:');
-                this._outputChannel.appendLine(stderr);
-                if (stderr.includes('Weka exception')) {
-                    throw new Error(stderr);
-                }
-            }
+            const stdout = await new Promise<string>((resolve, reject) => {
+                const child = spawn(javaCommand, { shell: true });
+                let out = '';
+                let err = '';
+                let errorHeaderShown = false;
 
-            // Mostrar resultados en un panel
-            this._showResults('Salida de WEKA', null, stdout, stderr);
+                child.stdout.on('data', (data: Buffer) => {
+                    const text = data.toString();
+                    out += text;
+                    this._outputChannel.append(text);
+                    options.onProgress?.(50);
+                });
 
-            if (options.onComplete) {
-                options.onComplete(stdout);
-            }
+                child.stderr.on('data', (data: Buffer) => {
+                    const text = data.toString();
+                    err += text;
+                    if (!errorHeaderShown) {
+                        this._outputChannel.appendLine('\nErrores de WEKA:');
+                        errorHeaderShown = true;
+                    }
+                    this._outputChannel.append(text);
+                    options.onProgress?.(50);
+                });
+
+                child.on('error', (error) => {
+                    reject(error);
+                });
+
+                child.on('close', () => {
+                    if (err && err.includes('Weka exception')) {
+                        reject(new Error(err));
+                        return;
+                    }
+
+                    // Mostrar resultados en un panel
+                    this._showResults('Salida de WEKA', null, out, err);
+
+                    if (options.onComplete) {
+                        options.onComplete(out);
+                    }
+
+                    resolve(out);
+                });
+            });
 
             return stdout;
         } catch (error: any) {
